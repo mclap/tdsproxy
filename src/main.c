@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -37,7 +38,7 @@ int net_socket(in_addr_t iaIP, in_port_t ipPort, struct sockaddr_in *srv)
 }
 
 static
-int net_listen_at(in_addr_t iaIP, in_port ipPort, int backlog)
+int net_listen_at(in_addr_t iaIP, in_port_t ipPort, int backlog)
 {
 	struct sockaddr_in sa;
 	int sock = net_socket(iaIP, ipPort, &sa);
@@ -59,7 +60,7 @@ int net_listen_at(in_addr_t iaIP, in_port ipPort, int backlog)
 }
 
 static
-void srv_accept_cb(int fd, short event, void *)
+void srv_accept_cb(int fd, short event, void *arg)
 {
 	struct sockaddr_in sa;
 	memset(&sa, 0, sizeof(sa));
@@ -72,7 +73,7 @@ void srv_accept_cb(int fd, short event, void *)
 		return;
 	}
 
-	int newsock = accept(fd, &sa, &sa_len);
+	int newsock = accept(fd, (struct sockaddr *)&sa, &sa_len);
 	if (newsock < 0)
 	{
 		TP_DEBUG("accept failed: %d", errno);
@@ -85,10 +86,10 @@ void srv_accept_cb(int fd, short event, void *)
 int main()
 {
 	struct event evmain;
-	int listenfd = net_listen_at(INADDR_ANY, 1433);
+	int listenfd = net_listen_at(INADDR_ANY, 1433, 4096);
 
 	event_init();
-	event_set(&evmain, listenfd, EV_READ, srv_accept, 0, 0);
+	event_set(&evmain, listenfd, EV_READ, srv_accept_cb, 0);
 
 	event_dispatch();
 
