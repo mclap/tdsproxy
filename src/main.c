@@ -11,6 +11,8 @@
 #include <sys/time.h>
 #include <signal.h>
 
+#include "protocol.h"
+
 #define TP_DEBUG(fmt, ...) do {					\
 		struct timeval tv;				\
 		gettimeofday(&tv, 0);				\
@@ -142,15 +144,34 @@ int net_listen_at(in_addr_t iaIP, in_port_t ipPort, int backlog)
 }
 
 static
+void print_header(struct pkt_header *hdr)
+{
+	printf("type: %d\n", (unsigned int)hdr->type);
+	printf("len : %d\n", ntohs(hdr->length));
+}
+
+static
 void srv_read_cb(struct bufferevent *ev, void *arg)
 {
 	srv_cn_t *ctx = (srv_cn_t *)arg;
-	TP_DEBUG("[%d] in %d bytes", ev->ev_read.ev_fd,
-		(int)EVBUFFER_LENGTH(ev->input));
+	int len = EVBUFFER_LENGTH(ev->input);
 
-	TP_DEBUG_DUMP(EVBUFFER_DATA(ev->input), EVBUFFER_LENGTH(ev->input),
+	TP_DEBUG("[%d] in %d bytes", ev->ev_read.ev_fd, len);
+
+	TP_DEBUG_DUMP(EVBUFFER_DATA(ev->input), len,
 		"[%d] incoming data of %d bytes", ev->ev_read.ev_fd,
-		(int)EVBUFFER_LENGTH(ev->input));
+		len);
+
+	char *ptr = EVBUFFER_DATA(ev->input);
+
+	while (len > sizeof(struct pkt_header))
+	{
+		struct pkt_header *hdr = (struct pkt_header *)ptr;
+
+		print_header(hdr);
+		len -= ntohs(hdr->length);
+		ptr += ntohs(hdr->length);
+	}
 }
 
 static
