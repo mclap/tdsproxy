@@ -1,0 +1,17 @@
+= System Requirement Specification for tds proxy
+
+== Functional requirements
+
+Proxy must provide transparent pool of connections to the Microsoft SQL Server 2000 and higher.
+
+== Detailed requirements
+
+=== tds proxy
+
+TP1 [Not implemented]. Proxy MUST allocate connections from pool according "User+Password+Database" tuple. If pool is empty, new connection must be created.
+
+TP2 [Not implemented]. Proxy MUST monitor database changes per connection.
+
+TP3 [Not implemented]. Proxy MUST limit number of connections per UPD tuple.
+
+TP4 [Not implemented]. Proxy MUST not break transactions if they take more than 1 SQL query.
