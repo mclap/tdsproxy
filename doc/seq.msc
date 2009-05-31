@@ -1,0 +1,31 @@
+msc {
+	client,proxy,server;
+
+	--- [label="pool is empty"];
+
+	client->proxy [label="connect"];
+	client:>proxy [label="TDS LOGIN7 (0x10)"];
+	proxy=>proxy [label="parse auth data"];
+	proxy=>proxy [label="create new handle"];
+	proxy->server [label="connect"];
+	proxy:>server [label="TDS LOGIN7 (0x10)"];
+	server:>proxy [label="TDS Response (0x04)"];
+	proxy:>client [label="TDS Response (0x04)"];
+	proxy=>proxy [label="release handle to pool"];
+
+	--- [label="pool have connections"];
+
+	client->proxy [label="connect"];
+	client:>proxy [label="TDS LOGIN7 (0x10)"];
+	proxy=>proxy [label="parse auth data"];
+	proxy=>proxy [label="acquire handle from pool"];
+	proxy:>client [label="TDS Response (0x04)"];
+
+	--- [label="reqular query"];
+	client:>proxy [label="TDS LANGUAGE (0x01)"];
+	proxy=>proxy [label="acquire handle from pool"];
+	proxy:>server [label="TDS LANGUAGE (0x01)"];
+	server:>proxy [label="TDS Response (0x04)"];
+	proxy:>client [label="TDS Response (0x04)"];
+	proxy=>proxy [label="release handle to pool"];
+}
